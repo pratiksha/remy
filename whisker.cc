@@ -45,7 +45,7 @@ vector< Whisker > Whisker::next_generation( void ) const
   copy._generation++;
   ret_windows.push_back( copy );
 
-  for ( unsigned int i = 1; i <= MAX_WINDOW_INCR; i *= 8 ) {
+  for ( unsigned int i = 1; i <= MAX_WINDOW_INCR; i *= 4 ) {
     Whisker new_whisker( *this );
     new_whisker._generation++;
 

@@ -50,11 +50,11 @@ public:
   friend size_t hash_value( const Whisker & whisker );
 };
 
-static const unsigned int MAX_WINDOW = 10;
-static constexpr double MAX_INTERSEND = 8;
+static const unsigned int MAX_WINDOW = 512;
+static constexpr double MAX_INTERSEND = 16;
 static constexpr double MAX_MULTIPLE = 1.0;
 
-static const unsigned int MAX_WINDOW_INCR = 20;
+static const unsigned int MAX_WINDOW_INCR = 64;
 static constexpr double MAX_INTERSEND_INCR = 8;
 static constexpr double MAX_MULTIPLE_INCR = 0.5;
 
