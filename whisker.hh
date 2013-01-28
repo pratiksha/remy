@@ -51,11 +51,11 @@ public:
 };
 
 static const unsigned int MAX_WINDOW = 512;
-static constexpr double MAX_INTERSEND = 16;
+static constexpr double MAX_INTERSEND = 100;
 static constexpr double MAX_MULTIPLE = 1.0;
 
 static const unsigned int MAX_WINDOW_INCR = 64;
-static constexpr double MAX_INTERSEND_INCR = 8;
+static constexpr double MAX_INTERSEND_INCR = 64;
 static constexpr double MAX_MULTIPLE_INCR = 0.5;
 
 static const unsigned int DEFAULT_WINDOW = 1;
