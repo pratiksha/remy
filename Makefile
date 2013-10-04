@@ -3,7 +3,7 @@ objects = link.o receiver.o random.o window-sender.o sendergang.o rat.o window-s
 executables = window-tester remy emil-tester rat-runner rat-printer
 CXX = g++
 LANGFLAGS = -std=c++0x
-CXXFLAGS = -g -O3 $(LANGFLAGS) -ffast-math -pedantic -Werror -Wall -Wextra -Weffc++ -fno-default-inline -pipe -pthread
+CXXFLAGS = -g -O2 $(LANGFLAGS) -pedantic -Werror -Wall -Wextra -Weffc++ -fno-default-inline -pipe -pthread
 LIBS = -lm -lprotobuf # -ltcmalloc
 PROTOC = protoc
 

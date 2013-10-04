@@ -42,10 +42,10 @@ int main( int argc, char *argv[] )
   }
 
   Evaluator::ConfigRange configuration_range;
-  configuration_range.link_packets_per_ms = make_pair( 1.0, 2.0 ); /* 10 Mbps to 20 Mbps */
+  configuration_range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
   configuration_range.rtt_ms = make_pair( 100, 200 ); /* ms */
-  configuration_range.max_senders = 16;
-  //  configuration_range.lo_only = true;
+  configuration_range.max_senders = 2;
+  configuration_range.lo_only = true;
   RatBreeder breeder( configuration_range );
 
   unsigned int run = 0;

@@ -5,7 +5,7 @@
 #include "network.cc"
 #include "rat-templates.cc"
 
-const unsigned int TICK_COUNT = 1000000;
+const unsigned int TICK_COUNT = 100000;
 
 Evaluator::Evaluator( const WhiskerTree & s_whiskers, const ConfigRange & range )
   : _prng( global_PRNG()() ), /* freeze the PRNG seed for the life of this Evaluator */
@@ -16,6 +16,8 @@ Evaluator::Evaluator( const WhiskerTree & s_whiskers, const ConfigRange & range 
   _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
 
   if ( range.lo_only ) {
+    _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
+
     return;
   }
 
