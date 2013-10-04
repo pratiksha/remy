@@ -18,8 +18,8 @@ public:
   double delay;
 
   NetConfig( void )
-    : mean_on_duration( 5000.0 ),
-      mean_off_duration( 5000.0 ),
+    : mean_on_duration( 10000.0 ),
+      mean_off_duration( 1.0 ),
       num_senders( 8 ),
       link_ppt( 1.0 ),
       delay( 150 )
@@ -28,6 +28,8 @@ public:
   NetConfig set_link_ppt( const double s_link_ppt ) { link_ppt = s_link_ppt; return *this; }
   NetConfig set_delay( const double s_delay ) { delay = s_delay; return *this; }
   NetConfig set_num_senders( const unsigned int n ) { num_senders = n; return *this; }
+  NetConfig set_on_duration( const double dur ) { mean_on_duration = dur; return *this; }
+  NetConfig set_off_duration( const double dur ) { mean_off_duration = dur; return *this; }
 
   std::string str( void ) const
   {

@@ -18,6 +18,8 @@ Evaluator::Evaluator( const WhiskerTree & s_whiskers, const ConfigRange & range 
   if ( range.lo_only ) {
     _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
 
+    _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 2 ).set_on_duration( 500 ).set_off_duration( 500 ) );
+
     return;
   }
 
