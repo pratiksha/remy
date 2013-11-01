@@ -51,7 +51,6 @@ int main( int argc, char *argv[] )
   range.max_senders = 3;
   range.lo_only = true;
 
-
   ///// Now create the configurations to test on. /////
 
   std::vector<NetConfig> configs;

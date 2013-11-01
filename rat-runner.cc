@@ -1,6 +1,3 @@
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
-
 #include <stdio.h>
 #include <vector>
 #include <string>
@@ -59,31 +56,16 @@ int main( int argc, char *argv[] )
   range.max_senders = num_senders;
   range.lo_only = true;
 
-
   ///// Now create the configurations to test on. /////
 
   std::vector<NetConfig> configs;
 
-  /* first load "anchors" */
+  // don't load any random configs
   configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
 
-  if ( !range.lo_only ) {
-    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
-    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
-    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
 
-    /* now load some random ones just for fun */
-    for ( int i = 0; i < 12; i++ ) {
-      boost::random::uniform_real_distribution<> link_speed( range.link_packets_per_ms.first, range.link_packets_per_ms.second );
-      boost::random::uniform_real_distribution<> rtt( range.rtt_ms.first, range.rtt_ms.second );
-      boost::random::uniform_int_distribution<> num_senders( 1, range.max_senders );
-
-      configs.push_back( NetConfig().set_link_ppt( link_speed( global_PRNG() ) ).set_delay( rtt( global_PRNG() ) ).set_num_senders( num_senders( global_PRNG() ) ) );
-    }
-  }
-    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
-
-    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 2 ).set_on_duration( 500 ).set_off_duration( 500 ) );
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 2 ).set_on_duration( 500 ).set_off_duration( 500 ) );
 
   Evaluator eval( whiskers, configs );
   auto outcome = eval.score( {}, false, 10 );
