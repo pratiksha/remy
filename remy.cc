@@ -1,3 +1,6 @@
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
 #include <stdio.h>
 #include <vector>
 #include <string>
@@ -7,6 +10,7 @@
 #include <fcntl.h>
 
 #include "ratbreeder.hh"
+#include "network.hh"
 
 using namespace std;
 
@@ -41,24 +45,51 @@ int main( int argc, char *argv[] )
     }
   }
 
-  Evaluator::ConfigRange configuration_range;
-  configuration_range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
-  configuration_range.rtt_ms = make_pair( 100, 200 ); /* ms */
-  configuration_range.max_senders = 2;
-  configuration_range.lo_only = true;
-  RatBreeder breeder( configuration_range );
+  Evaluator::ConfigRange range;
+  range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
+  range.rtt_ms = make_pair( 100, 200 ); /* ms */
+  range.max_senders = 3;
+  range.lo_only = true;
+
+
+  ///// Now create the configurations to test on. /////
+
+  std::vector<NetConfig> configs;
+
+  /* first load "anchors" */
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+
+  if ( !range.lo_only ) {
+    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
+    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
+
+    /* now load some random ones just for fun */
+    for ( int i = 0; i < 12; i++ ) {
+      boost::random::uniform_real_distribution<> link_speed( range.link_packets_per_ms.first, range.link_packets_per_ms.second );
+      boost::random::uniform_real_distribution<> rtt( range.rtt_ms.first, range.rtt_ms.second );
+      boost::random::uniform_int_distribution<> num_senders( 1, range.max_senders );
+
+      configs.push_back( NetConfig().set_link_ppt( link_speed( global_PRNG() ) ).set_delay( rtt( global_PRNG() ) ).set_num_senders( num_senders( global_PRNG() ) ) );
+    }
+  }
+    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
+
+    configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 2 ).set_on_duration( 500 ).set_off_duration( 500 ) );
+
+  RatBreeder breeder( configs);
 
   unsigned int run = 0;
 
   printf( "#######################\n" );
   printf( "Optimizing for link packets_per_ms in [%f, %f]\n",
-	  configuration_range.link_packets_per_ms.first,
-	  configuration_range.link_packets_per_ms.second );
+	  range.link_packets_per_ms.first,
+	  range.link_packets_per_ms.second );
   printf( "Optimizing for rtt_ms in [%f, %f]\n",
-	  configuration_range.rtt_ms.first,
-	  configuration_range.rtt_ms.second );
+	  range.rtt_ms.first,
+	  range.rtt_ms.second );
   printf( "Optimizing for num_senders = 1-%d\n",
-	  configuration_range.max_senders );
+	  range.max_senders );
 
   const NetConfig defaultnet;
 
