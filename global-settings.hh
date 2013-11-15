@@ -17,8 +17,8 @@ public:
   unsigned int memory_datasize;
 
   GlobalSettings()
-    : use_globals( false ),
-      memory_datasize( 3 )
+    : use_globals( true ),
+      memory_datasize( 2 )
   {}
 
 };

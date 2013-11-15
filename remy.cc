@@ -41,24 +41,27 @@ int main( int argc, char *argv[] )
     }
   }
 
-  Evaluator::ConfigRange configuration_range;
-  configuration_range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
-  configuration_range.rtt_ms = make_pair( 100, 200 ); /* ms */
-  configuration_range.max_senders = 2;
-  configuration_range.lo_only = true;
-  RatBreeder breeder( configuration_range );
+  Evaluator::ConfigRange range;
+  range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
+  range.rtt_ms = make_pair( 100, 200 ); /* ms */
+  range.max_senders = 2;
+  range.lo_only = true;
+  std::vector<NetConfig> configs;
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+
+  RatBreeder breeder( configs );
 
   unsigned int run = 0;
 
   printf( "#######################\n" );
   printf( "Optimizing for link packets_per_ms in [%f, %f]\n",
-	  configuration_range.link_packets_per_ms.first,
-	  configuration_range.link_packets_per_ms.second );
+	  range.link_packets_per_ms.first,
+	  range.link_packets_per_ms.second );
   printf( "Optimizing for rtt_ms in [%f, %f]\n",
-	  configuration_range.rtt_ms.first,
-	  configuration_range.rtt_ms.second );
+	  range.rtt_ms.first,
+	  range.rtt_ms.second );
   printf( "Optimizing for num_senders = 1-%d\n",
-	  configuration_range.max_senders );
+	  range.max_senders );
 
   const NetConfig defaultnet;
 

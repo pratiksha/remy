@@ -7,13 +7,15 @@
 
 const unsigned int TICK_COUNT = 1000000;
 
-Evaluator::Evaluator( const WhiskerTree & s_whiskers, const ConfigRange & range )
+Evaluator::Evaluator( const WhiskerTree & s_whiskers, std::vector<NetConfig> & configs )
   : _prng( global_PRNG()() ), /* freeze the PRNG seed for the life of this Evaluator */
     _whiskers( s_whiskers ),
-    _configs()
+    _configs( configs )
 {
+
+
   /* first load "anchors" */
-  _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+  /*  _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
 
   if ( range.lo_only ) {
     _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
@@ -26,15 +28,15 @@ Evaluator::Evaluator( const WhiskerTree & s_whiskers, const ConfigRange & range 
   _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
   _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
   _configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.second ).set_delay( range.rtt_ms.second ).set_num_senders( range.max_senders ) );
-
+  */
   /* now load some random ones just for fun */
-  for ( int i = 0; i < 12; i++ ) {
+  /*  for ( int i = 0; i < 12; i++ ) {
     boost::random::uniform_real_distribution<> link_speed( range.link_packets_per_ms.first, range.link_packets_per_ms.second );
     boost::random::uniform_real_distribution<> rtt( range.rtt_ms.first, range.rtt_ms.second );
     boost::random::uniform_int_distribution<> num_senders( 1, range.max_senders );
 
     _configs.push_back( NetConfig().set_link_ppt( link_speed( global_PRNG() ) ).set_delay( rtt( global_PRNG() ) ).set_num_senders( num_senders( global_PRNG() ) ) );
-  }
+    }*/
 }
 
 Evaluator::Outcome Evaluator::score( const std::vector< Whisker > & replacements,

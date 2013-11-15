@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "network.hh"
 #include "evaluator.hh"
 
 using namespace std;
@@ -50,13 +51,16 @@ int main( int argc, char *argv[] )
     }
   }
 
-  Evaluator::ConfigRange configuration_range;
-  configuration_range.link_packets_per_ms = make_pair( link_ppt, 0 ); /* 1 Mbps to 10 Mbps */
-  configuration_range.rtt_ms = make_pair( delay, 0 ); /* ms */
-  configuration_range.max_senders = num_senders;
-  configuration_range.lo_only = true;
-
-  Evaluator eval( whiskers, configuration_range );
+  Evaluator::ConfigRange range;
+  range.link_packets_per_ms = make_pair( link_ppt, 0 ); /* 1 Mbps to 10 Mbps */
+  range.rtt_ms = make_pair( delay, 0 ); /* ms */
+  range.max_senders = num_senders;
+  range.lo_only = true;
+  
+  std::vector<NetConfig> configs;
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+  
+  Evaluator eval( whiskers, configs );
   auto outcome = eval.score( {}, false, 10 );
   printf( "score = %f\n", outcome.score );
   double norm_score = 0;
