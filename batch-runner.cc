@@ -13,7 +13,7 @@
 using namespace std;
 
 
-void train_remy(std::vector<NetConfig> configs) {
+WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
   WhiskerTree whiskers;
 
   RatBreeder breeder( configs );
@@ -32,7 +32,7 @@ void train_remy(std::vector<NetConfig> configs) {
 
   printf( "Not saving output! Use remy.cc to save output.");
 
-  while ( 1 ) {
+  for(int i = 0; i < iterations; i++) {
     auto outcome = breeder.improve( whiskers );
     printf( "run = %u, score = %f\n", run, outcome.score );
 
@@ -46,12 +46,26 @@ void train_remy(std::vector<NetConfig> configs) {
     fflush( NULL );
     run++;
   }
+
+  return whiskers;
 }
 
 
-void test_remy( void ) {
+void test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
+  Evaluator eval( whiskers, configs );
+  auto outcome = eval.score( {}, false, 10 );
+  printf( "score = %f\n", outcome.score );
+  double norm_score = 0;
 
+  for ( auto &run : outcome.throughputs_delays ) {
+    printf( "===\nconfig: %s\n", run.first.str().c_str() );
+    for ( auto &x : run.second ) {
+      printf( "sender: [tp=%f, del=%f]\n", x.first / run.first.link_ppt, x.second / run.first.delay );
+      norm_score += log2( x.first / run.first.link_ppt ) - log2( x.second / run.first.delay );
+    }
+  }
 
+  printf( "normalized_score = %f\n", norm_score );
 }
 
 
@@ -111,7 +125,15 @@ int main( int argc, char *argv[] )
   printf( "num_senders = 1-%d.\n",
 	  range.max_senders );
 
-  train_remy(configs);
+  ///// Train Remy /////
+
+  WhiskerTree trained_whiskers;
+  trained_whiskers = train_remy(configs, 30);
+
+  ///// Test Remy /////
+
+  test_remy(trained_whiskers, configs);
+
 
   return 0;
 }
