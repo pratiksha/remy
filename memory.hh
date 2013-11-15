@@ -6,6 +6,7 @@
 
 #include "packet.hh"
 #include "dna.pb.h"
+#include "global-settings.hh"
 
 class Memory {
 public:
@@ -28,7 +29,8 @@ public:
       _last_tick_sent( 0 ),
       _last_tick_received( 0 ),
       _min_rtt( 0 )
-  {}
+  {
+  }
 
   Memory()
     : _rec_send_ewma( 0 ),
@@ -41,8 +43,8 @@ public:
 
   void reset( void ) { _rec_send_ewma = _rec_rec_ewma = _rtt_ratio = _last_tick_sent = _last_tick_received = _min_rtt = 0; }
 
-  static const unsigned int datasize = 3;
-
+  static unsigned int datasize( void ) { return g_RemySettings.use_globals ? g_RemySettings.memory_datasize : 3; };
+  
   const DataType & field( unsigned int num ) const { return num == 0 ? _rec_send_ewma : num == 1 ? _rec_rec_ewma : _rtt_ratio; }
   DataType & mutable_field( unsigned int num ) { return  num == 0 ? _rec_send_ewma : num == 1 ? _rec_rec_ewma : _rtt_ratio; }
 
