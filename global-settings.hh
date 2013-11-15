@@ -15,11 +15,16 @@ class GlobalSettings {
 public:
   bool use_globals;
   unsigned int memory_datasize;
+  std::vector<int> axis_values; // axes of interest to bisect on
 
   GlobalSettings()
     : use_globals( true ),
-      memory_datasize( 2 )
-  {}
+      memory_datasize( 3 ),
+      axis_values()
+  {
+    axis_values.push_back(0);
+    axis_values.push_back(2);
+  }
 
 };
 

@@ -1,6 +1,7 @@
 #include <boost/functional/hash.hpp>
 
 #include "memoryrange.hh"
+#include "global-settings.hh"
 
 using namespace std;
 using namespace boost::accumulators;
@@ -10,7 +11,7 @@ std::vector< MemoryRange > MemoryRange::bisect( void ) const
   vector< MemoryRange > ret { *this };
 
   /* bisect in each axis */
-  for ( unsigned int i = 0; i < Memory::datasize(); i++ ) {
+  for ( auto i : g_RemySettings.axis_values ) {
     vector< MemoryRange > doubled;
     for ( const auto &x : ret ) {
       auto ersatz_lower( x._lower ), ersatz_upper( x._upper );

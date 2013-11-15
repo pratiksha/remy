@@ -46,8 +46,15 @@ int main( int argc, char *argv[] )
   range.rtt_ms = make_pair( 100, 200 ); /* ms */
   range.max_senders = 2;
   range.lo_only = true;
+
   std::vector<NetConfig> configs;
+
   configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( range.max_senders ) );
+
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 1 ) );
+
+  configs.push_back( NetConfig().set_link_ppt( range.link_packets_per_ms.first ).set_delay( range.rtt_ms.first ).set_num_senders( 2 ).set_on_duration( 500 ).set_off_duration( 500 ) );
+
 
   RatBreeder breeder( configs );
 
