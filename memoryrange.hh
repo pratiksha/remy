@@ -18,10 +18,11 @@ private:
 							     boost::accumulators::stats<
 							       boost::accumulators::tag::median > > > _acc;
   mutable unsigned int _count;
+  static const std::vector<int> axis_values;
 
 public:
   MemoryRange( const Memory & s_lower, const Memory & s_upper )
-    : _lower( s_lower ), _upper( s_upper ), _acc( Memory::datasize() ), _count( 0 )
+    : _lower( s_lower ), _upper( s_upper ), _acc( Memory::datasize ), _count( 0 )
   {}
 
   std::vector< MemoryRange > bisect( void ) const;

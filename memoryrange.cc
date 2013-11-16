@@ -1,7 +1,7 @@
 #include <boost/functional/hash.hpp>
 
+#include "constants.hh"
 #include "memoryrange.hh"
-#include "global-settings.hh"
 
 using namespace std;
 using namespace boost::accumulators;
@@ -11,7 +11,7 @@ std::vector< MemoryRange > MemoryRange::bisect( void ) const
   vector< MemoryRange > ret { *this };
 
   /* bisect in each axis */
-  for ( auto i : g_RemySettings.axis_values ) {
+  for ( auto i : g_constants.axis_values ) {
     vector< MemoryRange > doubled;
     for ( const auto &x : ret ) {
       auto ersatz_lower( x._lower ), ersatz_upper( x._upper );
@@ -44,7 +44,7 @@ std::vector< MemoryRange > MemoryRange::bisect( void ) const
 Memory MemoryRange::range_median( void ) const
 {
   Memory median_data( _lower );
-  for ( unsigned int i = 0; i < Memory::datasize(); i++ ) {
+  for ( unsigned int i = 0; i < Memory::datasize; i++ ) {
     median_data.mutable_field( i ) = (_lower.field( i ) + _upper.field( i )) / 2;
   }
   return median_data;
@@ -58,7 +58,7 @@ bool MemoryRange::contains( const Memory & query ) const
 void MemoryRange::track( const Memory & query ) const
 {
   /* log it */
-  for ( unsigned int i = 0; i < Memory::datasize(); i++ ) {
+  for ( unsigned int i = 0; i < Memory::datasize; i++ ) {
     _acc[ i ]( query.field( i ) );
   }
 }
@@ -90,7 +90,7 @@ RemyBuffers::MemoryRange MemoryRange::DNA( void ) const
 MemoryRange::MemoryRange( const RemyBuffers::MemoryRange & dna )
   : _lower( dna.lower() ),
     _upper( dna.upper() ),
-    _acc( Memory::datasize() ),
+    _acc( Memory::datasize ),
     _count( 0 )
 {
 }

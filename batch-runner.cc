@@ -7,13 +7,14 @@
 #include <fcntl.h>
 
 #include "evaluator.hh"
-#include "global-settings.hh"
 #include "ratbreeder.hh"
+#include "constants.hh"
 
 using namespace std;
 
 
 WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
+
   WhiskerTree whiskers;
 
   RatBreeder breeder( configs );
@@ -26,9 +27,6 @@ WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 
   printf( "Optimizing for mean_on_duration = %f, mean_off_duration = %f\n",
 	  defaultnet.mean_on_duration, defaultnet.mean_off_duration );
-
-  //  printf( "Initial rules (use if=FILENAME to read from disk): %s\n", whiskers.str().c_str() );
-  //  printf( "#######################\n" );
 
   printf( "Not saving output! Use remy.cc to save output.");
 
@@ -52,6 +50,9 @@ WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 
 
 void test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
+
+  printf("*********** Testing ***********\n");
+
   Evaluator eval( whiskers, configs );
   auto outcome = eval.score( {}, false, 10 );
   printf( "score = %f\n", outcome.score );
@@ -73,6 +74,9 @@ int main( int argc, char *argv[] )
 {
   WhiskerTree whiskers;
   string output_filename;
+  unsigned int num_senders = 2;
+  double link_ppt = 1.0;
+  double delay = 100.0;
 
   for ( int i = 1; i < argc; i++ ) {
     string arg( argv[ i ] );
@@ -97,15 +101,19 @@ int main( int argc, char *argv[] )
       }
     } else if ( arg.substr( 0, 3 ) == "of=" ) {
       output_filename = string( arg.substr( 3 ) );
-    }
+    } 
   }
 
-  g_RemySettings.axis_values = {1, 2};
-
+  const std::vector<int> axis_values = {1, 2};
+  g_constants.axis_values.clear();
+  for (unsigned int i = 0; i < axis_values.size(); i++) {
+    g_constants.axis_values.push_back(axis_values[i]);
+  }
+ 
   Evaluator::ConfigRange range;
-  range.link_packets_per_ms = make_pair( 0.1, 2.0 ); /* 10 Mbps to 20 Mbps */
-  range.rtt_ms = make_pair( 100, 200 ); /* ms */
-  range.max_senders = 2;
+  range.link_packets_per_ms = make_pair( link_ppt, 0 ); /* 10 Mbps to 20 Mbps */
+  range.rtt_ms = make_pair( delay, 0 ); /* ms */
+  range.max_senders = num_senders;
   range.lo_only = true;
 
   std::vector<NetConfig> configs;
@@ -130,10 +138,13 @@ int main( int argc, char *argv[] )
   WhiskerTree trained_whiskers;
   trained_whiskers = train_remy(configs, 30);
 
+
   ///// Test Remy /////
 
-  test_remy(trained_whiskers, configs);
-
+  for(auto &x : configs){
+    std::vector<NetConfig> single_config = {x};
+    test_remy(trained_whiskers, single_config);
+  }
 
   return 0;
 }
