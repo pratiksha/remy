@@ -1,17 +1,22 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <math.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
 
 #include "evaluator.hh"
 #include "ratbreeder.hh"
 #include "constants.hh"
 
 using namespace std;
-
+using namespace boost::accumulators;
 
 WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 
@@ -49,7 +54,7 @@ WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 }
 
 
-void test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
+double test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
 
   printf("*********** Testing ***********\n");
 
@@ -67,6 +72,7 @@ void test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
   }
 
   printf( "normalized_score = %f\n", norm_score );
+  return norm_score;
 }
 
 
@@ -101,7 +107,16 @@ int main( int argc, char *argv[] )
       }
     } else if ( arg.substr( 0, 3 ) == "of=" ) {
       output_filename = string( arg.substr( 3 ) );
-    } 
+    } else if ( arg.substr( 0, 5 ) == "nsrc=" ) {
+      num_senders = atoi( arg.substr( 5 ).c_str() );
+      fprintf( stderr, "Setting num_senders to %d\n", num_senders );
+    } else if ( arg.substr( 0, 5 ) == "link=" ) {
+      link_ppt = atof( arg.substr( 5 ).c_str() );
+      fprintf( stderr, "Setting link packets per ms to %f\n", link_ppt );
+    } else if ( arg.substr( 0, 4 ) == "rtt=" ) {
+      delay = atof( arg.substr( 4 ).c_str() );
+      fprintf( stderr, "Setting delay to %f ms\n", delay );
+    }
   }
 
   const std::vector<int> axis_values = {1, 2};
@@ -136,14 +151,26 @@ int main( int argc, char *argv[] )
   ///// Train Remy /////
 
   WhiskerTree trained_whiskers;
-  trained_whiskers = train_remy(configs, 30);
+  trained_whiskers = train_remy(configs, 15);
 
 
   ///// Test Remy /////
+  
+  vector<accumulator_set<double, stats<tag::variance> > > accumulators;
+  for ( unsigned int i = 0; i < configs.size(); i++ ) {
+    accumulator_set<double, stats<tag::variance> > acc;
+    accumulators.push_back(acc);
+  }
 
-  for(auto &x : configs){
-    std::vector<NetConfig> single_config = {x};
-    test_remy(trained_whiskers, single_config);
+  for(int i = 0; i < 10; i++){
+    for ( unsigned int j = 0; j < configs.size(); j++ ) {
+      std::vector<NetConfig> single_config = { configs[j] };
+      accumulators[j](test_remy(trained_whiskers, single_config));
+    }
+  }
+
+  for ( unsigned int i = 0; i < configs.size(); i++ ) {
+    printf("Stats for config %s: mean %f, stdev %f\n", configs[i].str().c_str(), extract::mean(accumulators[i]), sqrt(extract::variance(accumulators[i])));
   }
 
   return 0;
