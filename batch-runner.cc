@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <math.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -124,15 +126,17 @@ int main( int argc, char *argv[] )
     } else if ( arg.substr( 0, 4 ) == "rtt=" ) {
       delay = atof( arg.substr( 4 ).c_str() );
       fprintf( stderr, "Setting delay to %f ms\n", delay );
+    } else if ( arg.substr( 0, 5 ) == "axes=" ) {
+      // comma-separated values, no spaces
+      g_constants.axis_values.clear();
+      stringstream ss(arg.substr(5));
+      string next;
+      while(getline(ss, next, ',')){
+	g_constants.axis_values.push_back(atoi(next.c_str()));
+      }
     }
   }
 
-  const std::vector<int> axis_values = {1, 2};
-  g_constants.axis_values.clear();
-  for (unsigned int i = 0; i < axis_values.size(); i++) {
-    g_constants.axis_values.push_back(axis_values[i]);
-  }
- 
   Evaluator::ConfigRange range;
   range.link_packets_per_ms = make_pair( link_ppt, 0 ); /* 10 Mbps to 20 Mbps */
   range.rtt_ms = make_pair( delay, 0 ); /* ms */
@@ -192,7 +196,7 @@ int main( int argc, char *argv[] )
 
   if ( !output_filename.empty() ) {
     string curr_outfile = output_filename;
-    for( auto val : axis_values) {
+    for( auto val : g_constants.axis_values) {
       curr_outfile += "." + to_string(val);
     }
 
