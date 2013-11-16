@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <fstream>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -26,14 +27,14 @@ WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 
   unsigned int run = 0;
 
-  printf( "********** Training **********\n" );
+  printf( "\n********** Training **********\n" );
 
   const NetConfig defaultnet;
 
   printf( "Optimizing for mean_on_duration = %f, mean_off_duration = %f\n",
 	  defaultnet.mean_on_duration, defaultnet.mean_off_duration );
 
-  printf( "Not saving output! Use remy.cc to save output.");
+  printf( "Not saving output! Use remy.cc to save output.\n");
 
   for(int i = 0; i < iterations; i++) {
     auto outcome = breeder.improve( whiskers );
@@ -54,25 +55,32 @@ WhiskerTree train_remy(std::vector<NetConfig> configs, int iterations) {
 }
 
 
-double test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs ) {
+/*
+  Test a configuration on the given set of whiskers.
+  Return the normalized score, average delays, and average throughputs.
+ */
+void test_remy( WhiskerTree whiskers, std::vector<NetConfig> configs,
+		vector<double> * avg_delays, vector<double> * avg_tps, 
+		double * norm_score  ) {
 
-  printf("*********** Testing ***********\n");
+  printf("\n*********** Testing ***********\n");
 
   Evaluator eval( whiskers, configs );
   auto outcome = eval.score( {}, false, 10 );
   printf( "score = %f\n", outcome.score );
-  double norm_score = 0;
-
+  *norm_score = 0;
+  
   for ( auto &run : outcome.throughputs_delays ) {
     printf( "===\nconfig: %s\n", run.first.str().c_str() );
     for ( auto &x : run.second ) {
       printf( "sender: [tp=%f, del=%f]\n", x.first / run.first.link_ppt, x.second / run.first.delay );
-      norm_score += log2( x.first / run.first.link_ppt ) - log2( x.second / run.first.delay );
+      avg_tps->push_back(x.first/run.first.link_ppt);
+      avg_delays->push_back(x.second/run.first.delay);
+      *norm_score += log2( x.first / run.first.link_ppt ) - log2( x.second / run.first.delay );
     }
   }
 
-  printf( "normalized_score = %f\n", norm_score );
-  return norm_score;
+  printf( "normalized_score = %f\n", *norm_score );
 }
 
 
@@ -156,21 +164,58 @@ int main( int argc, char *argv[] )
 
   ///// Test Remy /////
   
-  vector<accumulator_set<double, stats<tag::variance> > > accumulators;
+  vector<accumulator_set<double, stats<tag::variance> > > scores;
+  vector<accumulator_set<double, stats<tag::variance> > > tps;
+  vector<accumulator_set<double, stats<tag::variance> > > delays;
   for ( unsigned int i = 0; i < configs.size(); i++ ) {
-    accumulator_set<double, stats<tag::variance> > acc;
-    accumulators.push_back(acc);
+    accumulator_set<double, stats<tag::variance> > score_acc;
+    accumulator_set<double, stats<tag::variance> > tp_acc;
+    accumulator_set<double, stats<tag::variance> > delay_acc;
+    scores.push_back(score_acc);
+    tps.push_back(tp_acc);
+    delays.push_back(delay_acc);
   }
 
   for(int i = 0; i < 10; i++){
     for ( unsigned int j = 0; j < configs.size(); j++ ) {
-      std::vector<NetConfig> single_config = { configs[j] };
-      accumulators[j](test_remy(trained_whiskers, single_config));
+      vector<NetConfig> single_config = { configs[j] };
+      vector<double> avg_delays;
+      vector<double> avg_throughputs;
+      double norm_score;
+      test_remy(trained_whiskers, single_config, & avg_delays, & avg_throughputs, 
+		& norm_score);
+      scores[j](norm_score);
+      tps[j](avg_throughputs[0]);
+      delays[j](avg_delays[0]);
     }
   }
 
-  for ( unsigned int i = 0; i < configs.size(); i++ ) {
-    printf("Stats for config %s: mean %f, stdev %f\n", configs[i].str().c_str(), extract::mean(accumulators[i]), sqrt(extract::variance(accumulators[i])));
+  if ( !output_filename.empty() ) {
+    string curr_outfile = output_filename;
+    for( auto val : axis_values) {
+      curr_outfile += "." + to_string(val);
+    }
+
+    char of[ 128 ];
+    snprintf( of, 128, "%s", curr_outfile.c_str());
+    
+    fprintf( stderr, "Writing to \"%s\"... ", of );
+    FILE* outfile = fopen(of, "a");
+  
+    for ( unsigned int i = 0; i < configs.size(); i++ ) {
+      printf("\n***** Stats for config %s\nNormalized score: mean %f, stdev %f\nThroughputs: mean %f, stdev %f\nDelays: mean %f, stdev %f\n\n", 
+	     configs[i].str().c_str(), 
+	     extract::mean(scores[i]), sqrt(extract::variance(scores[i])), 
+	     extract::mean(tps[i]), sqrt(extract::variance(tps[i])), 
+	     extract::mean(delays[i]), sqrt(extract::variance(delays[i])));
+      
+      fprintf(outfile, "\n***** Stats for config %s\nNormalized score: mean %f, stdev %f\nThroughputs: mean %f, stdev %f\nDelays: mean %f, stdev %f\n\n", 
+	      configs[i].str().c_str(), 
+	      extract::mean(scores[i]), sqrt(extract::variance(scores[i])), 
+	      extract::mean(tps[i]), sqrt(extract::variance(tps[i])), 
+	      extract::mean(delays[i]), sqrt(extract::variance(delays[i])));
+    }
+    
   }
 
   return 0;
