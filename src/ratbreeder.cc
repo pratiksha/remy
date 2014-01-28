@@ -111,7 +111,46 @@ Evaluator::Outcome RatBreeder::improve( WhiskerTree & whiskers )
 	}
       }
 
+      vector< pair< Whisker &, future< double > > > scores2;
+      vector< pair< Whisker &, double > > memoized_scores2;
+
       assert( best_whisker );
+      printf("best whisker is now %s\n", best_whisker->str().c_str());
+      auto new_replacements( best_whisker->next_generation_intersend() );
+
+      printf( "Evaluating %lu intersend replacements for %s.\n", replacements.size(), best_whisker->str().c_str() );
+
+      /* find best case (using same randseed) */
+      for ( auto &test_replacement : new_replacements ) {
+	//	printf( "Evaluating %s... ", test_replacement.str().c_str() );
+	if ( evalcache.find( test_replacement ) == evalcache.end() ) {
+	  scores2.emplace_back( test_replacement, async( launch::async, [] (const Evaluator &e, const Whisker &r) { return e.score( { r } ).score; }, eval, test_replacement ) );
+	} else {
+	  memoized_scores2.emplace_back( test_replacement, evalcache.at( test_replacement ) );
+	}
+      }
+
+      for ( auto &x : memoized_scores2 ) {
+	const double score( x.second );
+	//	printf( "score = %f\n", score );
+	if ( score > best_score ) {
+	  best_whisker = &x.first;
+	  best_score = score;
+	}
+      }
+
+      for ( auto &x : scores2 ) {
+	const double score( x.second.get() );
+	evalcache.insert( make_pair( x.first, score ) );
+	//	printf( "score = %f\n", score );
+	if ( score > best_score ) {
+	  best_whisker = &x.first;
+	  best_score = score;
+	}
+      }
+
+      assert( best_whisker );
+      printf("best whisker after intersend is now %s\n", best_whisker->str().c_str());
 
       /* replace with best nexgen choice and repeat */
       if ( best_score > outcome.score ) {
@@ -122,9 +161,11 @@ Evaluator::Outcome RatBreeder::improve( WhiskerTree & whiskers )
 	differential_whisker = *best_whisker;
 	differential_whisker.demote( diffgen );
 	outcome.score = best_score;
+	printf( "whiskers %s\n", whiskers.str().c_str() );
       } else {
 	assert( whiskers.replace( *best_whisker ) );
 	printf( "Done with search.\n" );
+	printf( "** whiskers %s\n", whiskers.str().c_str() );
 	break;
       }
     }

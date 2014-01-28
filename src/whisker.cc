@@ -71,13 +71,13 @@ vector< T > Whisker::OptimizationSetting< T >::alternatives( const T & value ) c
 vector< Whisker > Whisker::next_generation( void ) const
 {
   vector< Whisker > ret;
-
   for ( const auto & alt_window : get_optimizer().window_increment.alternatives( _window_increment ) ) {
     for ( const auto & alt_multiple : get_optimizer().window_multiple.alternatives( _window_multiple ) ) {
-      for ( const auto & alt_intersend : get_optimizer().intersend.alternatives( _intersend ) ) {
+      //      for ( const auto & alt_intersend : get_optimizer().intersend.alternatives( _intersend ) ) {
+      const auto & alt_intersend = _intersend;
 	Whisker new_whisker { *this };
-	new_whisker._generation++;
 
+	new_whisker._generation++;
 	new_whisker._window_increment = alt_window;
 	new_whisker._window_multiple = alt_multiple;
 	new_whisker._intersend = alt_intersend;
@@ -85,12 +85,26 @@ vector< Whisker > Whisker::next_generation( void ) const
 	new_whisker.round();
 
 	ret.push_back( new_whisker );
-      }
+	//      }
     }
   }
 
   return ret;
 }
+
+vector< Whisker > Whisker::next_generation_intersend( void ) const
+{
+  vector< Whisker > ret;
+  for ( const auto & alt_intersend : get_optimizer().intersend.alternatives( _intersend ) ) {
+	Whisker new_whisker { *this };
+	new_whisker._intersend = alt_intersend;
+	new_whisker._window_increment = _window_increment;
+	new_whisker.round();
+	ret.push_back( new_whisker );
+  }
+  return ret;
+}
+
 
 void Whisker::promote( const unsigned int generation )
 {

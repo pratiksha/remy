@@ -35,6 +35,7 @@ public:
   const MemoryRange & domain( void ) const { return _domain; }
 
   std::vector< Whisker > next_generation( void ) const;
+  std::vector< Whisker > next_generation_intersend( void ) const;
 
   void promote( const unsigned int generation );
 
